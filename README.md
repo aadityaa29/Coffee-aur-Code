@@ -47,7 +47,7 @@ yarn dev
 Open http://localhost:3000 in your browser to see the app running.
 
 ## Deployment
-Netlify hosting service & Github (later).
+Netlify hosting service (later).
 
 ## Contributing
 Contributions are welcome! Feel free to open issues or pull requests to improve the project.
