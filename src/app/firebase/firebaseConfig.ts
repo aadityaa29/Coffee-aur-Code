@@ -4,12 +4,12 @@ import { getAuth } from "firebase/auth";
 // import { getAnalytics } from "firebase/analytics"; // Optional
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBmFnVgbHhP8B4eKtawQ77i55RUhKRDgbM",
-  authDomain: "coffee-aur-code.firebaseapp.com",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: "coffee-aur-code",
   storageBucket: "coffee-aur-code.appspot.com", // <-- fix typo: should be .appspot.com
   messagingSenderId: "442234220729",
-  appId: "1:442234220729:web:1586bc79f1512e212cab68",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   measurementId: "G-D055B6FJ83"
 };
 
