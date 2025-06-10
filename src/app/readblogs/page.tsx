@@ -2,35 +2,58 @@
 
 import { useEffect, useState } from 'react';
 import { db } from '@/app/firebase/firebaseConfig';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import Modal from '@/components/modal';
 
+// Define the Blog type
+interface Blog {
+  id: string;
+  title: string;
+  author: string;
+  email?: string;
+  category?: string;
+  content: string;
+  shortDescription?: string;
+  estimatedReadTime?: string;
+  tags?: string[];
+  isDeleted?: boolean;
+}
+
 export default function ReadBlogPage() {
-  const [blogs, setBlogs] = useState<any[]>([]);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBlog, setSelectedBlog] = useState<any | null>(null);
+  const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
 
   useEffect(() => {
     const q = collection(db, 'blogs');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setBlogs(data.filter(blog => !blog.isDeleted));
-      setLoading(false);
-    }, (error) => {
-      console.error('Error fetching blogs:', error);
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const data: Blog[] = snapshot.docs.map(
+          (doc: QueryDocumentSnapshot<DocumentData>) => ({
+            id: doc.id,
+            ...(doc.data() as Omit<Blog, 'id'>),
+          })
+        );
+        setBlogs(data.filter((blog) => !blog.isDeleted));
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching blogs:', error);
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
 
   // Group blogs by category
-  const groupedBlogs = blogs.reduce((acc, blog) => {
+  const groupedBlogs = blogs.reduce<Record<string, Blog[]>>((acc, blog) => {
     const category = blog.category || 'Uncategorized';
     if (!acc[category]) acc[category] = [];
     acc[category].push(blog);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {});
 
   // Helper: Get short preview from HTML content
   function getExcerpt(html: string, maxLength = 120) {
@@ -53,7 +76,7 @@ export default function ReadBlogPage() {
           <div key={category} className="mb-10">
             <h2 className="text-2xl font-bold mb-4 text-purple-300">{category}</h2>
             <ul className="space-y-4">
-              {blogs.map(blog => (
+              {blogs.map((blog) => (
                 <li
                   key={blog.id}
                   className="bg-gray-800 rounded-lg p-4 shadow cursor-pointer hover:bg-gray-700 transition"
@@ -67,7 +90,9 @@ export default function ReadBlogPage() {
                     <div className="mb-1 text-gray-300">{blog.shortDescription}</div>
                   )}
                   {blog.estimatedReadTime && (
-                    <div className="mb-1 text-gray-400">Estimated Read Time: {blog.estimatedReadTime}</div>
+                    <div className="mb-1 text-gray-400">
+                      Estimated Read Time: {blog.estimatedReadTime}
+                    </div>
                   )}
                   <div className="mb-2 text-gray-200 text-sm">
                     {getExcerpt(blog.content)}
@@ -95,9 +120,14 @@ export default function ReadBlogPage() {
               <div className="mb-1 text-gray-300">{selectedBlog.shortDescription}</div>
             )}
             {selectedBlog.estimatedReadTime && (
-              <div className="mb-1 text-gray-400">Estimated Read Time: {selectedBlog.estimatedReadTime}</div>
+              <div className="mb-1 text-gray-400">
+                Estimated Read Time: {selectedBlog.estimatedReadTime}
+              </div>
             )}
-            <div className="prose prose-invert max-w-none mb-2" dangerouslySetInnerHTML={{ __html: selectedBlog.content }} />
+            <div
+              className="prose prose-invert max-w-none mb-2"
+              dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
+            />
             {selectedBlog.tags && selectedBlog.tags.length > 0 && (
               <div className="text-sm text-gray-400 mb-2">
                 Tags: {selectedBlog.tags.join(', ')}
